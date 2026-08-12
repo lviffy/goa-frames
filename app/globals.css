@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+/*
+ * Two type families, both self-hosted. `block` display on Imbue matters:
+ * the card rasterises to PNG, and a swap-in mid-render bakes the fallback
+ * face into someone's downloaded image.
+ */
+@font-face {
+  font-family: 'Imbue';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('/fonts/Imbue-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Victor Mono';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url('/fonts/VictorMono-latin.woff2') format('woff2');
+}
+
+@theme {
+  --color-hh-green: #0b6839;
+  --color-hh-deep: #053f21;
+  --color-hh-ink: #032a16;
+  --color-hh-yellow: #fee101;
+  --color-hh-pink: #ff0080;
+  --color-hh-cream: #fffbe8;
+
+  --font-display: 'Imbue', ui-serif, Georgia, serif;
+  --font-mono: 'Victor Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  color-scheme: dark;
+  --stage: #07120c;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--stage);
+  color: var(--color-hh-cream);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* The dock sits over the bottom edge; keep it clear of the iOS home bar. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* The tool is a single fixed stage — never let the page itself scroll sideways. */
+body {
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The indeterminate sweep under the upload plate while a photo decodes. */
+@keyframes intake {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(410%);
+  }
+}
+
+/* Keyboard focus must stay visible on both the dark stage and the cream card. */
+:focus-visible {
+  outline: 2px solid var(--color-hh-yellow);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
