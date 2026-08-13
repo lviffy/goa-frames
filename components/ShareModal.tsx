@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { BRAND } from '@/lib/brand';
-import { BTN_PRIMARY, BTN_SECONDARY } from './ui';
+import { BTN_PRIMARY } from './ui';
 
 type Props = {
   isOpen: boolean;
@@ -19,7 +19,8 @@ export default function ShareModal({
   onReopenX,
   shareUrl,
 }: Props) {
-  const [copiedStatus, setCopiedStatus] = useState<string | null>(null);
+  const [copiedImageStatus, setCopiedImageStatus] = useState<string | null>(null);
+  const [copiedLinkStatus, setCopiedLinkStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -32,20 +33,32 @@ export default function ShareModal({
 
   if (!isOpen) return null;
 
-  const handleCopy = async () => {
+  const handleCopyImage = async () => {
     try {
       await onCopyImage();
-      setCopiedStatus('Copied to clipboard!');
-      setTimeout(() => setCopiedStatus(null), 2500);
+      setCopiedImageStatus('Image copied!');
+      setTimeout(() => setCopiedImageStatus(null), 2500);
     } catch {
-      setCopiedStatus('Could not copy image');
-      setTimeout(() => setCopiedStatus(null), 2500);
+      setCopiedImageStatus('Could not copy image');
+      setTimeout(() => setCopiedImageStatus(null), 2500);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLinkStatus('Link copied!');
+      setTimeout(() => setCopiedLinkStatus(null), 2500);
+    } catch {
+      setCopiedLinkStatus('Copy failed');
+      setTimeout(() => setCopiedLinkStatus(null), 2500);
     }
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="share-modal-title"
@@ -63,7 +76,7 @@ export default function ShareModal({
           </svg>
         </button>
 
-        {/* Title */}
+        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="grid size-10 place-items-center rounded-full bg-hh-yellow/15 border border-hh-yellow/30 text-hh-yellow">
             <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
@@ -72,80 +85,117 @@ export default function ShareModal({
           </div>
           <div>
             <h2 id="share-modal-title" className="font-mono text-base font-bold text-hh-cream">
-              Sharing to X (Twitter)
+              Pass Ready to Share & Post
             </h2>
             <p className="font-mono text-xs text-hh-cream/60">
-              X composer opened in a new tab
+              Image copied · PNG downloaded · Link generated
             </p>
           </div>
         </div>
 
-        {/* Steps Guide */}
+        {/* Guidance Boxes */}
         <div className="space-y-3 my-5 font-mono text-xs">
-          {/* Step 1: Clipboard Paste */}
-          <div className="flex items-start gap-3 rounded-xl border border-hh-yellow/40 bg-hh-yellow/10 p-4">
-            <div className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-hh-yellow text-hh-ink font-bold text-sm">
-              ✨
+          {/* Action 1: Paste Image */}
+          <div className="flex items-start gap-3 rounded-xl border border-hh-yellow/40 bg-hh-yellow/10 p-3.5">
+            <div className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-hh-yellow text-hh-ink font-bold text-xs">
+              1
             </div>
-            <div>
-              <p className="font-bold text-hh-yellow text-[14px]">
-                Paste Image directly into Twitter
+            <div className="flex-1">
+              <p className="font-bold text-hh-yellow text-[13px]">
+                Paste Card Image into Twitter
               </p>
-              <p className="text-hh-cream/90 mt-1 leading-relaxed text-[12px]">
-                Your pass image was automatically copied to your clipboard! In your open Twitter tab, simply press{' '}
-                <kbd className="px-2 py-0.5 bg-black/60 rounded border border-hh-cream/40 text-white font-mono font-bold text-[11px]">
+              <p className="text-hh-cream/90 mt-1 leading-relaxed text-[11px]">
+                Your pass image is copied to your clipboard! In Twitter, press{' '}
+                <kbd className="px-1.5 py-0.5 bg-black/60 rounded border border-hh-cream/40 text-white font-bold text-[10px]">
                   Ctrl + V
                 </kbd>{' '}
                 (or{' '}
-                <kbd className="px-2 py-0.5 bg-black/60 rounded border border-hh-cream/40 text-white font-mono font-bold text-[11px]">
+                <kbd className="px-1.5 py-0.5 bg-black/60 rounded border border-hh-cream/40 text-white font-bold text-[10px]">
                   Cmd + V
                 </kbd>
-                ) to attach the pass image directly into the post!
+                ) to attach the pass directly.
               </p>
             </div>
           </div>
 
-          {/* Step 2: Drag & Drop from Downloads */}
+          {/* Action 2: Shareable Link */}
+          {shareUrl && (
+            <div className="flex items-start gap-3 rounded-xl border border-hh-cream/15 bg-white/5 p-3.5">
+              <div className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-hh-cream/20 text-hh-cream font-bold text-xs">
+                2
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-bold text-hh-cream text-[13px]">
+                    Shareable Pass Link
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="rounded bg-hh-yellow/20 hover:bg-hh-yellow/30 border border-hh-yellow/40 px-2 py-0.5 font-mono text-[10px] text-hh-yellow font-bold transition active:scale-95"
+                  >
+                    {copiedLinkStatus ?? 'Copy Link'}
+                  </button>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2 rounded bg-black/40 px-2.5 py-1.5 border border-hh-cream/10">
+                  <span className="truncate text-hh-cream/70 text-[10px]">
+                    {shareUrl}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action 3: Downloaded PNG */}
           <div className="flex items-start gap-3 rounded-xl border border-hh-cream/15 bg-white/5 p-3.5">
             <div className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-hh-cream/20 text-hh-cream font-bold text-xs">
-              📁
+              3
             </div>
             <div>
               <p className="font-bold text-hh-cream text-[13px]">
-                Backup: Drag & Drop from Downloads
+                Saved to Downloads
               </p>
               <p className="text-hh-cream/70 mt-1 leading-relaxed text-[11px]">
-                The high-res pass PNG was also saved to your downloads folder. You can drag and drop it straight into Twitter&apos;s composer.
+                High-res PNG is downloaded. You can drag and drop it into Twitter, Telegram, or WhatsApp anytime.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Buttons / Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-hh-cream/10">
+        {/* Footer Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-hh-cream/10">
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleCopy}
+              onClick={handleCopyImage}
               className="rounded-lg border border-hh-cream/20 bg-white/10 px-3 py-1.5 font-mono text-xs text-hh-cream hover:bg-white/20 transition active:scale-95"
             >
-              {copiedStatus ?? 'Copy Image Again'}
+              {copiedImageStatus ?? 'Copy Image'}
             </button>
+            {shareUrl && (
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="rounded-lg border border-hh-cream/20 bg-white/10 px-3 py-1.5 font-mono text-xs text-hh-cream hover:bg-white/20 transition active:scale-95"
+              >
+                {copiedLinkStatus ?? 'Copy Link'}
+              </button>
+            )}
             <button
               type="button"
               onClick={onReopenX}
               className="rounded-lg border border-hh-cream/20 bg-white/10 px-3 py-1.5 font-mono text-xs text-hh-cream hover:bg-white/20 transition active:scale-95"
             >
-              Re-open X
+              Open X Again
             </button>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className={`${BTN_PRIMARY} text-xs py-1.5 px-4`}
+            className={`${BTN_PRIMARY} text-xs py-1.5 px-5`}
           >
-            Got it!
+            Done
           </button>
         </div>
       </div>

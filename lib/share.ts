@@ -457,8 +457,8 @@ export async function shareToX(data: CardData, publishedUrl?: string): Promise<S
     // Non-critical
   }
 
-  // Open Twitter composer with clean caption (without ugly long link)
-  openIntent(text);
+  // Open Twitter composer with caption and shareable pass link
+  openIntent(text, url);
 
   return { attached: false, copied, downloaded, url };
 }
@@ -475,9 +475,10 @@ export async function copyCardToClipboard(data: CardData): Promise<void> {
   }
 }
 
-/** Re-open X composer with pre-filled caption */
-export function reopenX(data: CardData): void {
+/** Re-open X composer with pre-filled caption and pass link */
+export async function reopenX(data: CardData, url?: string): Promise<void> {
   const text = caption(data);
-  openIntent(text);
+  const finalUrl = url ?? (await shareUrl(data, 1_500));
+  openIntent(text, finalUrl);
 }
 
