@@ -47,6 +47,8 @@ const MARQUEE = { y: HEADER_H, h: 30 } as const;
 
 /** The portrait window. Arched top — the Goan doorway, not a passport box. */
 export const PHOTO_WINDOW = { x: M, y: 226, w: 608, h: 640 } as const;
+/** Marks the photo layers so a live preview can re-frame them in place. */
+export const PHOTO_CLASS = 'pass-photo';
 const ARCH_R = 190;
 
 /** The data column beside the portrait. */
@@ -253,8 +255,11 @@ function portrait(data: CardData, cw: Colorway, placeholder: boolean): string {
   if (data.photo && !placeholder) {
     const r = photoRect(data.photo.width, data.photo.height, w, h, data.photo.transform);
     const href = esc(data.photo.dataUrl);
+    // Tagged so the live preview can re-frame the photo by setting four
+    // attributes on these two elements, instead of rebuilding the whole
+    // document on every pointer move. See CardPreview.
     const img = (extra: string) =>
-      `<image x="${n2(x + r.x)}" y="${n2(y + r.y)}" width="${n2(r.width)}" height="${n2(r.height)}" preserveAspectRatio="none" href="${href}" xlink:href="${href}"${extra}/>`;
+      `<image class="${PHOTO_CLASS}" x="${n2(x + r.x)}" y="${n2(y + r.y)}" width="${n2(r.width)}" height="${n2(r.height)}" preserveAspectRatio="none" href="${href}" xlink:href="${href}"${extra}/>`;
     photoLayers = `${img('')}${img(` filter="url(#duo)" opacity="0.45" mask="url(#sunmask)"`)}`;
   } else {
     photoLayers = `${rect(x, y, w, h, cw.stock)}
@@ -431,25 +436,62 @@ function column(data: CardData, cw: Colorway): string {
   return `<g>${out.join('')}</g>`;
 }
 
+/** Smallest and largest the billing is ever set at. */
+const TITLE_MIN = 40;
+const TITLE_MAX = 136;
+/** Vertical room the two lines get between the portrait and the stats rule. */
+const TITLE_AVAIL = RULE_Y - TITLE_TOP - 24;
+/** Gap between line one's baseline and line two's cap, as a fraction of size. */
+const TITLE_LEAD = 0.14;
+
 /**
- * The generated title, set as poster billing: two lines, flush left and right,
- * with the accent plate printed a hair out of register underneath. That
- * misregistration is the single cheapest thing on this card and the one that
- * makes it look screen-printed rather than exported.
+ * The generated title, set as poster billing: two lines flush left and flush
+ * right against each other, with the accent plate printed a hair out of
+ * register underneath. That misregistration is the single cheapest thing on
+ * this card and the one that makes it look screen-printed rather than exported.
+ *
+ * The two lines are set at *different* sizes, chosen so their widths match.
+ * One size for both and the shorter line justified with tracking is the
+ * obvious approach and it is what this used to do — but the split puts the
+ * last word on its own line, so line two is routinely half the length of line
+ * one, and closing that on a nine-letter word costs about a quarter of an em
+ * per gap. "M A C H I N I S T" reads as a ransom note, not as billing. Sizing
+ * the line up instead reads as intent, and the last word is the payoff of the
+ * whole title, so it has earned the size.
+ *
+ * The block width falls out of the space rather than being chosen: with both
+ * lines set to width T the stack is `cap·T·(1/uA + 1/uB)` tall plus leading,
+ * so T is whatever fits between the portrait and the rule. It lands short of
+ * the full column, which is fine — the air on the right is what stops the
+ * lower half of the card reading as three stacked full-width bands.
  */
 function title(data: CardData, cw: Colorway): string {
   const [a, b] = data.identity.titleLines;
-  const sizeFor = (s: string) => (s ? fitSize(s, CW_, 'imbue700', 40, 104) : 104);
-  const size = Math.min(sizeFor(a), sizeFor(b));
-  const wA = measure(a, 'imbue700') * size;
-  const wB = measure(b, 'imbue700') * size;
-  const target = Math.max(wA, wB);
+  const capK = capOf('imbue700');
 
-  const cap = capOf('imbue700') * size;
-  const y1 = TITLE_TOP + cap;
-  const y2 = y1 + size * 1.0;
+  /* Advance width of each line in units of font-size; 0 for an absent line. */
+  const uA = a ? measure(a, 'imbue700') : 0;
+  const uB = b ? measure(b, 'imbue700') : 0;
+  const inv = (u: number) => (u > 0 ? 1 / u : 0);
 
-  const draw = (s: string, y: number, fill: string, dx = 0, dy = 0, opacity = 1) =>
+  // Leading is driven by the smaller of the two sizes, which is the one with
+  // the larger unit width — hence min() over the inverses, not over the sizes.
+  const denom = capK * (inv(uA) + inv(uB)) + TITLE_LEAD * Math.min(inv(uA), inv(uB));
+  const T = denom > 0 ? Math.min(CW_, TITLE_AVAIL / denom) : CW_;
+
+  // The clamps matter at both ends: a two-letter last word would otherwise be
+  // set at 300pt, and a pasted-in essay of an override at 6pt. Whichever end
+  // bites, the line stops matching T and the residual is closed with tracking
+  // (short) or simply left ragged (long).
+  const sizeOf = (u: number) =>
+    u > 0 ? Math.min(TITLE_MAX, Math.max(TITLE_MIN, T / u), CW_ / u) : TITLE_MAX;
+  const sA = sizeOf(uA);
+  const sB = sizeOf(uB);
+
+  const y1 = TITLE_TOP + capK * sA;
+  const y2 = y1 + TITLE_LEAD * Math.min(sA, sB) + capK * sB;
+
+  const draw = (s: string, size: number, y: number, fill: string, dx = 0, dy = 0, opacity = 1) =>
     s
       ? text(s, {
           x: M + dx,
@@ -457,14 +499,18 @@ function title(data: CardData, cw: Colorway): string {
           face: 'imbue700',
           size,
           fill,
-          tracking: trackTo(s, target, size, 'imbue700'),
+          tracking: trackTo(s, T, size, 'imbue700', 0.12),
           opacity,
         })
       : '';
 
+  // The offset of the out-of-register plate scales with the type, or it reads
+  // as a drop shadow under small billing and as a printing fault under large.
+  const off = Math.max(4, Math.round(Math.max(sA, sB) * 0.055));
+
   return `<g>
-${draw(a, y1, cw.accent, 6, 6, 0.5)}${draw(b, y2, cw.accent, 6, 6, 0.5)}
-${draw(a, y1, cw.display)}${draw(b, y2, cw.display)}
+${draw(a, sA, y1, cw.accent, off, off, 0.5)}${draw(b, sB, y2, cw.accent, off, off, 0.5)}
+${draw(a, sA, y1, cw.display)}${draw(b, sB, y2, cw.display)}
 </g>`;
 }
 

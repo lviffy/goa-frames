@@ -369,15 +369,23 @@ function openIntent(text: string, url?: string | null): void {
   if (!win) window.location.href = href;
 }
 
+export type ShareToXResult = {
+  attached?: boolean;
+  copied?: boolean;
+  url?: string | null;
+  cancelled?: boolean;
+};
+
 /**
  * Open X with the caption pre-filled — with the PNG attached where the platform
- * allows it, and otherwise with a link whose preview *is* the card.
+ * allows it, copied to clipboard for easy pasting on desktop, and with a link
+ * whose preview is the card.
  *
  * `publishedUrl` lets the caller pass a URL it already holds; otherwise we use
  * the speculative upload, waiting a moment for it only on the fallback path
  * where the link is what carries the image.
  */
-export async function shareToX(data: CardData, publishedUrl?: string): Promise<void> {
+export async function shareToX(data: CardData, publishedUrl?: string): Promise<ShareToXResult> {
   const text = caption(data);
 
   if (canAttachImage()) {
@@ -388,17 +396,33 @@ export async function shareToX(data: CardData, publishedUrl?: string): Promise<v
         // Only append a link we already have — never make the share sheet wait.
         const known = publishedUrl ?? peekShareUrl(data);
         await navigator.share({ files: [file], text: known ? `${text}\n${known}` : text });
-        return;
+        return { attached: true };
       }
     } catch (err) {
       // The user closing the share sheet is a normal outcome, not a failure.
-      if (isAbort(err)) return;
+      if (isAbort(err)) return { cancelled: true };
       // An export failure is real and should surface; anything else falls
       // through to the link path, which is a legitimate way to share.
       if (err instanceof ExportError) throw err;
     }
   }
 
+  // Copy image to clipboard so desktop users can paste it directly into X
+  let copied = false;
+  try {
+    const blob = await cachedCardPng(data);
+    if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type || 'image/png']: blob })
+      ]);
+      copied = true;
+    }
+  } catch {
+    // Clipboard write may be restricted or unsupported; fallback to link/download
+  }
+
   const url = publishedUrl ?? (await shareUrl(data, 3_000));
   openIntent(text, url);
+
+  return { attached: false, copied, url };
 }

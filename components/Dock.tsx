@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { COLORWAYS } from '@/lib/brand';
-import { canAttachImage, downloadCard, peekShare, shareToX } from '@/lib/share';
+import { downloadCard, shareToX } from '@/lib/share';
 import type { BuilderInput, CardData } from '@/lib/types';
 import { BTN_PRIMARY, BTN_SECONDARY, LABEL } from './ui';
 
@@ -97,11 +97,15 @@ export default function Dock({ data, input, onInput, onReroll, onFile }: Props) 
         await downloadCard(data);
         setNote('Saved. Look in your downloads for the PNG.');
       } else {
-        const attaches = canAttachImage();
-        await shareToX(data);
-        if (attaches) {
+        const res = await shareToX(data);
+        if (res.cancelled) {
+          return;
+        }
+        if (res.attached) {
           setNote('Share sheet open, caption written, pass attached.');
-        } else if (peekShare(data)?.status === 'published') {
+        } else if (res.copied) {
+          setNote('X is open with your caption! Pass image copied to clipboard — paste (Ctrl+V) into your post!');
+        } else if (res.url) {
           setNote('X is open with your caption. The link preview is your pass.');
         } else {
           setNote('X is open with your caption. Download the PNG and attach it to the post.');
