@@ -12,13 +12,20 @@ export const metadata: Metadata = {
     title: 'Boarding Pass No. 247 — Hacker House Goa 2026',
     description: 'Get issued your builder pass for Hacker House Goa, 28–31 Oct 2026.',
     type: 'website',
-    images: ['/og-default.png'],
+    images: [
+      {
+        url: '/hero-bg.png',
+        width: 1200,
+        height: 630,
+        alt: 'Hacker House Goa 2026',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Boarding Pass No. 247 — Hacker House Goa 2026',
     description: 'Get issued your builder pass for Hacker House Goa, 28–31 Oct 2026.',
-    images: ['/og-default.png'],
+    images: ['/hero-bg.png'],
   },
   icons: { icon: '/favicon.svg' },
 };

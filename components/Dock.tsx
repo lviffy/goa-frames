@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { COLORWAYS } from '@/lib/brand';
-import { downloadCard, shareToX } from '@/lib/share';
+import { copyCardToClipboard, downloadCard, reopenX, shareToX } from '@/lib/share';
 import type { BuilderInput, CardData } from '@/lib/types';
+import ShareModal from './ShareModal';
 import { BTN_PRIMARY, BTN_SECONDARY, LABEL } from './ui';
 
 type Props = {
@@ -81,6 +82,8 @@ export default function Dock({ data, input, onInput, onReroll, onFile }: Props) 
   const swapRef = useRef<HTMLInputElement>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState<'download' | 'share' | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [lastShareUrl, setLastShareUrl] = useState<string | undefined>(undefined);
   const inkName = useId();
 
   useEffect(() => {
@@ -103,12 +106,10 @@ export default function Dock({ data, input, onInput, onReroll, onFile }: Props) 
         }
         if (res.attached) {
           setNote('Share sheet open, caption written, pass attached.');
-        } else if (res.copied) {
-          setNote('X is open with your caption! Pass image copied to clipboard — paste (Ctrl+V) into your post!');
-        } else if (res.url) {
-          setNote('X is open with your caption. The link preview is your pass.');
         } else {
-          setNote('X is open with your caption. Download the PNG and attach it to the post.');
+          setLastShareUrl(res.url);
+          setShowShareModal(true);
+          setNote('X is open! Pass image copied to clipboard — press Ctrl+V / Cmd+V into your post.');
         }
       }
     } catch (err) {
@@ -256,6 +257,14 @@ export default function Dock({ data, input, onInput, onReroll, onFile }: Props) 
           </button>
         </div>
       </div>
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onCopyImage={() => copyCardToClipboard(data)}
+        onReopenX={() => reopenX(data, lastShareUrl)}
+        shareUrl={lastShareUrl}
+      />
     </div>
   );
 }
