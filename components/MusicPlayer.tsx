@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MOODS, MoodType, Track } from '@/lib/playlist';
+import { Track } from '@/lib/playlist';
 import { useYouTubeAudio } from '@/hooks/useYouTubeAudio';
 
 function formatTime(seconds: number): string {
@@ -23,7 +23,6 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
     isMuted,
     isShuffle,
     repeatMode,
-    selectedMood,
     playlist,
     play,
     pause,
@@ -36,7 +35,6 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
     toggleMute,
     toggleShuffle,
     toggleRepeat,
-    setSelectedMood,
   } = useYouTubeAudio();
 
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
@@ -136,7 +134,7 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
   return (
     <aside
       aria-label="Saloon Music Player"
-      className="fixed bottom-4 sm:bottom-6 left-1/2 z-40 w-[94vw] max-w-[560px] -translate-x-1/2 transition-all duration-300 ease-out"
+      className="fixed bottom-4 sm:bottom-6 left-1/2 z-40 w-[94vw] max-w-[520px] -translate-x-1/2 transition-all duration-300 ease-out"
     >
       {/* Playlist Drawer Modal */}
       {isPlaylistOpen && (
@@ -147,7 +145,7 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
           <div className="flex items-center justify-between border-b border-hh-cream/15 pb-2.5">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-semibold uppercase tracking-wider text-hh-yellow">
-                📻 Saloon Radio Playlist
+                📻 Ambient Playlist
               </span>
               <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] text-hh-cream/70">
                 {playlist.length} tracks
@@ -165,26 +163,8 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
             </button>
           </div>
 
-          {/* Mood Filter Tabs */}
-          <div className="no-scrollbar mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-1">
-            {MOODS.map((mood) => (
-              <button
-                key={mood}
-                type="button"
-                onClick={() => setSelectedMood(mood)}
-                className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-[11px] transition ${
-                  selectedMood === mood
-                    ? 'bg-hh-yellow font-bold text-black shadow-sm'
-                    : 'bg-white/10 text-hh-cream/70 hover:bg-white/15 hover:text-white'
-                }`}
-              >
-                {mood}
-              </button>
-            ))}
-          </div>
-
           {/* Track List */}
-          <div className="mt-3 max-h-56 space-y-1 overflow-y-auto pr-1">
+          <div className="mt-3 space-y-1">
             {playlist.map((track, idx) => {
               const isCurrent = currentTrack.id === track.id;
               return (

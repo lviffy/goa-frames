@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MoodType, PLAYLIST, Track } from '@/lib/playlist';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { PLAYLIST, Track } from '@/lib/playlist';
 
 export interface YouTubeAudioState {
   currentTrack: Track;
@@ -14,7 +14,6 @@ export interface YouTubeAudioState {
   isMuted: boolean;
   isShuffle: boolean;
   repeatMode: 'none' | 'all' | 'one';
-  selectedMood: MoodType;
   playlist: Track[];
   isPlayerReady: boolean;
   hasStarted: boolean;
@@ -29,11 +28,9 @@ export interface YouTubeAudioState {
   toggleMute: () => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
-  setSelectedMood: (mood: MoodType) => void;
 }
 
 export function useYouTubeAudio(): YouTubeAudioState {
-  const [selectedMood, setSelectedMood] = useState<MoodType>('All');
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -47,13 +44,7 @@ export function useYouTubeAudio(): YouTubeAudioState {
   const [hasStarted, setHasStarted] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Filtered playlist based on active mood
-  const playlist = useMemo(() => {
-    if (selectedMood === 'All') return PLAYLIST;
-    return PLAYLIST.filter((t) => t.mood === selectedMood);
-  }, [selectedMood]);
-
+  const playlist = PLAYLIST;
   const currentTrack = playlist[currentTrackIndex] || playlist[0] || PLAYLIST[0];
 
   // Initialize HTML5 Audio instance
@@ -154,7 +145,7 @@ export function useYouTubeAudio(): YouTubeAudioState {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.title,
       artist: currentTrack.artist,
-      album: currentTrack.album || 'Saloon Classics',
+      album: 'Goa Radio',
       artwork: [
         {
           src: currentTrack.coverUrl,
@@ -299,14 +290,6 @@ export function useYouTubeAudio(): YouTubeAudioState {
     });
   }, []);
 
-  const handleMoodChange = useCallback(
-    (newMood: MoodType) => {
-      setSelectedMood(newMood);
-      setCurrentTrackIndex(0);
-    },
-    [],
-  );
-
   return {
     currentTrack,
     currentTrackIndex,
@@ -318,7 +301,6 @@ export function useYouTubeAudio(): YouTubeAudioState {
     isMuted,
     isShuffle,
     repeatMode,
-    selectedMood,
     playlist,
     isPlayerReady,
     hasStarted,
@@ -333,6 +315,5 @@ export function useYouTubeAudio(): YouTubeAudioState {
     toggleMute,
     toggleShuffle,
     toggleRepeat,
-    setSelectedMood: handleMoodChange,
   };
 }
