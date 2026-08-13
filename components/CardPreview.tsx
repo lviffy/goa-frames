@@ -2,17 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import { usePhotoFraming } from '@/hooks/usePhotoFraming';
-import { CARD } from '@/lib/brand';
-import { cardDataUri } from '@/lib/card/renderCard';
+import { PHOTO_WINDOW, cardDataUri } from '@/lib/card/renderCard';
 import { DEFAULT_TRANSFORM, type CardData, type PhotoTransform } from '@/lib/types';
 
 /*
- * The photo window inside the card, in card units. renderCard owns the real
- * geometry and doesn't export it yet, so this is an assumption — the framing
- * gesture stays in the right ballpark but the clamp won't be exact until the
- * renderer exports its window rect. See the report.
+ * The framing gesture is measured against the renderer's own window rect, so a
+ * drag that hits the pan clamp here is exactly the drag that hits it in the
+ * exported PNG.
  */
-const WINDOW = { w: CARD.w * 0.8, h: CARD.h * 0.46 };
+const WINDOW = PHOTO_WINDOW;
 
 type Props = {
   data: CardData;

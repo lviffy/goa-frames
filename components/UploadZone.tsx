@@ -53,8 +53,11 @@ export default function UploadZone({ status, error, dragging, onFile, className 
       <RegMark className="bottom-2.5 left-2.5" />
       <RegMark className="bottom-2.5 right-2.5" />
 
+      {/* The full line wraps and orphans "2026" on a 390px phone, so the event
+          name — which the headline says anyway — only joins once it fits. */}
       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-hh-cream/60">
-        {EVENT.name} · {EVENT.window}
+        <span className="hidden sm:inline">{EVENT.name} · </span>
+        {EVENT.window}
       </p>
 
       <h1 className="mt-3 font-display text-[clamp(2.6rem,11vw,4.5rem)] font-semibold leading-[0.84] tracking-tight text-hh-cream">
@@ -89,7 +92,9 @@ export default function UploadZone({ status, error, dragging, onFile, className 
         </button>
       </div>
 
-      <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-hh-cream/45">
+      {/* Neither gesture exists on a touch device, where this only wraps to two
+          lines and pushes the buttons up. */}
+      <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-hh-cream/45 [@media(pointer:coarse)]:hidden">
         Or drag it anywhere on this page · paste with ⌘V / Ctrl+V
       </p>
 

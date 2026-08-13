@@ -70,6 +70,22 @@ body {
   }
 }
 
+/*
+ * The pass, sized to whatever space the stage has left over.
+ *
+ * Written by hand rather than as a Tailwind arbitrary value: v4 rejects `cqh`
+ * as an arbitrary unit and silently emits no rule at all, which leaves the pass
+ * with `width: auto` and collapses it to the width of its own text.
+ *
+ * Height-aware on purpose. Sizing off width alone makes the pass overshoot the
+ * viewport the moment the dock appears on a phone, and a 4:5 card that runs off
+ * the bottom of the screen is the one thing the builder can't scroll to see.
+ */
+.pass-fit {
+  aspect-ratio: 4 / 5;
+  width: min(100%, 80cqh, 30rem);
+}
+
 /* The indeterminate sweep under the upload plate while a photo decodes. */
 @keyframes intake {
   0% {

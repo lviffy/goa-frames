@@ -8,6 +8,13 @@
  * parts. Both are static; nothing here re-renders.
  */
 
+/**
+ * Trig results are rounded before they reach an attribute. `Math.cos`/`Math.sin`
+ * are implementation-defined to the last ULP, so Node and Chrome disagree in the
+ * 17th digit and React reports a hydration mismatch on every single load.
+ */
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
 const CREAM = '#FFFBE8';
 const YELLOW = '#FEE101';
 const PINK = '#FF0080';
@@ -70,10 +77,10 @@ function Sun({ x, y, r }: { x: number; y: number; r: number }) {
           return (
             <line
               key={a}
-              x1={x + Math.cos(rad) * inner}
-              y1={y + Math.sin(rad) * inner}
-              x2={x + Math.cos(rad) * outer}
-              y2={y + Math.sin(rad) * outer}
+              x1={r2(x + Math.cos(rad) * inner)}
+              y1={r2(y + Math.sin(rad) * inner)}
+              x2={r2(x + Math.cos(rad) * outer)}
+              y2={r2(y + Math.sin(rad) * outer)}
             />
           );
         })}
@@ -168,6 +175,12 @@ function Defs({ id }: { id: string }) {
   );
 }
 
+/*
+ * Both viewBoxes are cut to roughly the aspect they'll be shown at, because
+ * `slice` crops the overflowing axis and whatever sits there is simply gone.
+ * The pass is centred on top of this, so nothing that has to be seen — the sun,
+ * the palm crowns — is allowed to sit in the middle third.
+ */
 function Wide() {
   return (
     <svg
@@ -179,16 +192,17 @@ function Wide() {
     >
       <Defs id="w" />
       <rect width="1600" height="1000" fill="url(#sky-w)" />
-      <Sun x={800} y={600} r={132} />
+      {/* Off-centre, so it clears the pass instead of being hidden behind it. */}
+      <Sun x={1252} y={470} r={104} />
       {/* Headland, far side of the bay. */}
-      <path d="M0 604 q 120 -46 250 -8 q 90 26 190 8 L440 604 Z" fill="#0E7B45" opacity={0.9} />
-      <path d="M1180 604 q 130 -54 250 -14 q 90 28 170 14 L1600 604 Z" fill="#0E7B45" opacity={0.9} />
-      <Sea top={604} bottom={1000} left={0} right={1600} id="w" />
-      <Reflection x={800} y={612} w={230} />
-      <Palm x={168} y={1090} scale={2.05} weight={8} />
-      <Palm x={1452} y={1060} scale={1.95} flip weight={8} />
-      <Palm x={392} y={1010} scale={1.15} opacity={0.6} weight={7} />
-      <Palm x={1252} y={1030} scale={1.05} flip opacity={0.55} weight={7} />
+      <path d="M0 566 q 120 -46 250 -8 q 90 26 190 8 L440 566 Z" fill="#0E7B45" opacity={0.9} />
+      <path d="M1180 566 q 130 -54 250 -14 q 90 28 170 14 L1600 566 Z" fill="#0E7B45" opacity={0.9} />
+      <Sea top={566} bottom={1000} left={0} right={1600} id="w" />
+      <Reflection x={1252} y={574} w={186} />
+      <Palm x={126} y={1030} scale={1.32} weight={8} />
+      <Palm x={1512} y={1010} scale={1.24} flip weight={8} />
+      <Palm x={330} y={986} scale={0.86} opacity={0.5} weight={7} />
+      <Palm x={1318} y={996} scale={0.8} flip opacity={0.45} weight={7} />
       <rect width="1600" height="1000" filter="url(#grain-w)" opacity={0.16} style={{ mixBlendMode: 'overlay' }} />
     </svg>
   );
@@ -198,21 +212,24 @@ function Narrow() {
   return (
     <svg
       className="h-full w-full sm:hidden"
-      viewBox="0 0 600 1000"
+      viewBox="0 0 460 1000"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"
       focusable="false"
     >
       <Defs id="n" />
-      <rect width="600" height="1000" fill="url(#sky-n)" />
-      <Sun x={300} y={470} r={104} />
-      <path d="M0 474 q 90 -38 180 -6 q 50 18 90 6 L270 474 Z" fill="#0E7B45" opacity={0.9} />
-      <path d="M420 474 q 80 -40 150 -8 L600 474 Z" fill="#0E7B45" opacity={0.9} />
-      <Sea top={474} bottom={1000} left={0} right={600} id="n" />
-      <Reflection x={300} y={482} w={182} />
-      <Palm x={44} y={1010} scale={1.7} weight={8} />
-      <Palm x={566} y={980} scale={1.55} flip weight={8} />
-      <rect width="600" height="1000" filter="url(#grain-n)" opacity={0.16} style={{ mixBlendMode: 'overlay' }} />
+      <rect width="460" height="1000" fill="url(#sky-n)" />
+      {/* Off-centre here too. Dead centre it sits directly behind the upload
+          plate, and the glass is translucent enough that yellow bleeding
+          through drops the kicker below a readable contrast. */}
+      <Sun x={344} y={246} r={82} />
+      <path d="M0 372 q 70 -30 140 -5 q 40 14 70 5 L210 372 Z" fill="#0E7B45" opacity={0.9} />
+      <path d="M322 372 q 62 -32 116 -6 L460 372 Z" fill="#0E7B45" opacity={0.9} />
+      <Sea top={372} bottom={1000} left={0} right={460} id="n" />
+      <Reflection x={344} y={380} w={146} />
+      <Palm x={52} y={1000} scale={1.12} weight={8} />
+      <Palm x={430} y={968} scale={1.02} flip weight={8} />
+      <rect width="460" height="1000" filter="url(#grain-n)" opacity={0.16} style={{ mixBlendMode: 'overlay' }} />
     </svg>
   );
 }

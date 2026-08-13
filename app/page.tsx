@@ -24,8 +24,8 @@ const PLACEHOLDER = { handle: '@yourhandle', stack: 'Rust · infra' };
 
 const EMPTY: BuilderInput = { handle: '', stack: '', colorway: DEFAULT_COLORWAY };
 
-/** Height-aware sizing: the pass fills the space left over, never more. */
-const HERO = 'aspect-[4/5] w-[min(100%,80cqh)] max-w-[min(100%,30rem)]';
+/** Height-aware sizing: the pass fills the space left over, never more. See globals.css. */
+const HERO = 'pass-fit';
 
 export default function Page() {
   const [input, setInput] = useState<BuilderInput>(EMPTY);
@@ -112,7 +112,14 @@ export default function Page() {
     <>
       <GoaScene />
 
-      <div className="flex min-h-dvh flex-col">
+      {/*
+        `h-dvh`, not `min-h-dvh`: the stage below is a size container, and a
+        container-query container needs a *definite* block size or `cqh`
+        resolves to 0 — which silently collapses the pass to the width of its
+        own text. `min-h` leaves the height content-dependent. The floor lets a
+        very short window scroll rather than crush the pass to nothing.
+      */}
+      <div className="flex h-dvh min-h-[600px] flex-col">
         <TopBar onReset={photo ? reset : undefined} />
 
         <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-4 [container-type:size]">

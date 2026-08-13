@@ -277,7 +277,7 @@ export async function exportPng(data: CardData, opts?: { scale?: number }): Prom
  * Where the 4:5 card sits inside the 1.91:1 link preview.
  * 440×550 is exactly 0.8, so the card is never distorted.
  */
-const SLOT = { x: 80, y: 40, w: 440, h: 550 } as const;
+export const SLOT = { x: 80, y: 40, w: 440, h: 550 } as const;
 /** The type column beside it. */
 const COL = { x: 600, w: 540 } as const;
 
@@ -288,7 +288,7 @@ const COL = { x: 600, w: 540 } as const;
  * than nesting one SVG inside another via <image href="data:image/svg+xml">,
  * which several browsers refuse to load. Two rasters, one canvas, no nesting.
  */
-function ogChromeSvg(data: CardData): string {
+export function ogChromeSvg(data: CardData): string {
   const cw = colorway(data.input.colorway);
   const { w, h } = OG;
   const serial = String(data.identity.serial).padStart(4, '0');
