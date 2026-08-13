@@ -84,6 +84,11 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePlay, toggleMute]);
 
+  // Hide music player UI completely while making/editing the ticket
+  if (hasDock) {
+    return null;
+  }
+
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   // Minimized state: sleek floating vinyl badge
@@ -91,9 +96,7 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
     return (
       <aside
         aria-label="Audio player mini widget"
-        className={`fixed z-40 transition-all duration-300 ${
-          hasDock ? 'bottom-[130px] right-4 sm:bottom-24 sm:right-6' : 'bottom-6 right-6'
-        }`}
+        className="fixed bottom-6 right-6 z-40 transition-all duration-300"
       >
         <button
           type="button"
@@ -133,9 +136,7 @@ export default function MusicPlayer({ hasDock }: { hasDock?: boolean }) {
   return (
     <aside
       aria-label="Saloon Music Player"
-      className={`fixed left-1/2 z-40 w-[94vw] max-w-[560px] -translate-x-1/2 transition-all duration-300 ease-out ${
-        hasDock ? 'bottom-[128px] sm:bottom-[92px]' : 'bottom-4 sm:bottom-6'
-      }`}
+      className="fixed bottom-4 sm:bottom-6 left-1/2 z-40 w-[94vw] max-w-[560px] -translate-x-1/2 transition-all duration-300 ease-out"
     >
       {/* Playlist Drawer Modal */}
       {isPlaylistOpen && (
