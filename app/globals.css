@@ -83,7 +83,12 @@ body {
  */
 .pass-fit {
   aspect-ratio: 4 / 5;
-  width: min(100%, 80cqh, 30rem);
+  width: min(88%, 68cqh, 24rem);
+}
+
+.upload-fit {
+  width: min(94vw, 32.5rem);
+  max-width: 520px;
 }
 
 /* The indeterminate sweep under the upload plate while a photo decodes. */
@@ -96,9 +101,111 @@ body {
   }
 }
 
+/* Vinyl rotation animation */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+.animation-paused {
+  animation-play-state: paused !important;
+}
+
+/* Audio equalizer bars */
+@keyframes soundbar-1 {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+@keyframes soundbar-2 {
+  0%, 100% { height: 14px; }
+  50% { height: 5px; }
+}
+@keyframes soundbar-3 {
+  0%, 100% { height: 7px; }
+  50% { height: 18px; }
+}
+@keyframes soundbar-4 {
+  0%, 100% { height: 16px; }
+  50% { height: 6px; }
+}
+
+.animate-soundbar-1 {
+  animation: soundbar-1 0.8s ease-in-out infinite;
+}
+.animate-soundbar-2 {
+  animation: soundbar-2 0.95s ease-in-out infinite;
+}
+.animate-soundbar-3 {
+  animation: soundbar-3 0.7s ease-in-out infinite;
+}
+.animate-soundbar-4 {
+  animation: soundbar-4 1.1s ease-in-out infinite;
+}
+
+/* Custom audio seek and volume slider */
+input[type='range'].audio-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type='range'].audio-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 251, 232, 0.2);
+}
+
+input[type='range'].audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--color-hh-cream);
+  margin-top: -3px;
+  box-shadow: 0 0 8px rgba(255, 251, 232, 0.6);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+input[type='range'].audio-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.3);
+  background: var(--color-hh-yellow);
+}
+
+input[type='range'].audio-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 251, 232, 0.2);
+}
+
+input[type='range'].audio-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--color-hh-cream);
+  border: none;
+  box-shadow: 0 0 8px rgba(255, 251, 232, 0.6);
+  transition: transform 0.15s ease;
+}
+
+input[type='range'].audio-slider:hover::-moz-range-thumb {
+  transform: scale(1.3);
+  background: var(--color-hh-yellow);
+}
+
 /* Keyboard focus must stay visible on both the dark stage and the cream card. */
 :focus-visible {
   outline: 2px solid var(--color-hh-yellow);
   outline-offset: 2px;
   border-radius: 2px;
 }
+

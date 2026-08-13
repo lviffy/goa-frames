@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CardPreview from '@/components/CardPreview';
 import Dock from '@/components/Dock';
 import GoaScene from '@/components/GoaScene';
+import MusicPlayer from '@/components/MusicPlayer';
 import TopBar from '@/components/TopBar';
 import UploadZone, { type IntakeStatus } from '@/components/UploadZone';
 import { useFileIntake } from '@/components/useFileIntake';
@@ -122,7 +123,13 @@ export default function Page() {
       <div className="flex h-dvh min-h-[600px] flex-col">
         <TopBar onReset={photo ? reset : undefined} />
 
-        <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-4 [container-type:size]">
+        <div
+          className={`relative flex min-h-0 flex-1 justify-center px-4 [container-type:size] ${
+            photo
+              ? 'items-center pt-2 pb-16 sm:pb-20'
+              : 'items-end pb-[100px] sm:pb-[116px]'
+          }`}
+        >
           {photo ? (
             <>
               <CardPreview
@@ -145,7 +152,7 @@ export default function Page() {
             </>
           ) : (
             <UploadZone
-              className={HERO}
+              className="upload-fit"
               status={status}
               error={error}
               dragging={dragging}
@@ -163,6 +170,8 @@ export default function Page() {
             onFile={takeFile}
           />
         )}
+
+        <MusicPlayer hasDock={Boolean(photo)} />
       </div>
     </>
   );

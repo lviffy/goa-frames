@@ -40,12 +40,12 @@ export default function UploadZone({ status, error, dragging, onFile, className 
 
   return (
     <div
-      className={`relative flex flex-col items-center justify-center overflow-hidden rounded-[14px] border px-5 text-center backdrop-blur-xl transition-colors ${
+      className={`relative flex flex-col items-center justify-center overflow-hidden rounded-[18px] border px-5 py-4 sm:px-8 sm:py-5 text-center backdrop-blur-2xl shadow-[0_16px_50px_rgba(0,0,0,0.6)] transition-all ${
         dragging
-          ? 'border-hh-yellow bg-hh-yellow/10'
+          ? 'border-hh-yellow bg-hh-yellow/15 shadow-[0_0_30px_rgba(254,225,1,0.2)]'
           : status === 'error'
-            ? 'border-hh-pink/70 bg-hh-cream/[0.06]'
-            : 'border-hh-cream/25 bg-hh-cream/[0.06]'
+            ? 'border-hh-pink/70 bg-black/60'
+            : 'border-hh-cream/25 bg-black/55 hover:border-hh-cream/40'
       } ${className}`}
     >
       <RegMark className="left-2.5 top-2.5" />
@@ -53,26 +53,24 @@ export default function UploadZone({ status, error, dragging, onFile, className 
       <RegMark className="bottom-2.5 left-2.5" />
       <RegMark className="bottom-2.5 right-2.5" />
 
-      {/* The full line wraps and orphans "2026" on a 390px phone, so the event
-          name — which the headline says anyway — only joins once it fits. */}
-      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-hh-cream/60">
+      {/* Event Window */}
+      <p className="font-mono text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.22em] text-hh-cream/60">
         <span className="hidden sm:inline">{EVENT.name} · </span>
         {EVENT.window}
       </p>
 
-      <h1 className="mt-3 font-display text-[clamp(2.6rem,11vw,4.5rem)] font-semibold leading-[0.84] tracking-tight text-hh-cream">
-        BOARDING
-        <br />
-        PASS N<span className="text-hh-yellow">°</span>247
+      {/* Headline */}
+      <h1 className="mt-1.5 font-display text-[clamp(1.8rem,4.5vw,2.6rem)] font-bold leading-tight tracking-tight text-hh-cream">
+        BOARDING PASS N<span className="text-hh-yellow">°</span>247
       </h1>
 
-      <p className="mt-4 max-w-[30ch] font-mono text-xs leading-relaxed text-hh-cream/75 sm:text-sm">
+      <p className="mt-1.5 max-w-[38ch] font-mono text-[11px] sm:text-xs leading-relaxed text-hh-cream/80">
         {dragging
           ? 'Let go — we’ll take it from here.'
           : 'Drop in a photo of yourself and your pass gets issued on the spot. No account, no waiting.'}
       </p>
 
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+      <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
         <button
           type="button"
           className={BTN_PRIMARY}
@@ -92,9 +90,8 @@ export default function UploadZone({ status, error, dragging, onFile, className 
         </button>
       </div>
 
-      {/* Neither gesture exists on a touch device, where this only wraps to two
-          lines and pushes the buttons up. */}
-      <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-hh-cream/45 [@media(pointer:coarse)]:hidden">
+      {/* Footnote */}
+      <p className="mt-2.5 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] text-hh-cream/45 [@media(pointer:coarse)]:hidden">
         Or drag it anywhere on this page · paste with ⌘V / Ctrl+V
       </p>
 
