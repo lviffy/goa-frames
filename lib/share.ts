@@ -245,22 +245,55 @@ export function peekShareUrl(data: CardData): string | null {
   return outcome?.status === 'published' ? outcome.url : null;
 }
 
+/** Encode card metadata to a compact base64url string for stateless link previews */
+export function encodeCardPayload(data: CardData): string {
+  const payload = {
+    h: data.input.handle,
+    s: data.input.stack,
+    t: data.identity.title,
+    n: data.identity.serial,
+    c: data.input.colorway,
+  };
+  const jsonStr = encodeURIComponent(JSON.stringify(payload));
+  if (typeof btoa !== 'undefined') {
+    return btoa(jsonStr).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  return Buffer.from(jsonStr).toString('base64url');
+}
+
+/** Generate a stateless share link that displays the dynamic card preview */
+export function fallbackShareUrl(data: CardData): string {
+  const origin =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+  return `${origin}/c/p/${encodeCardPayload(data)}`;
+}
+
 /**
- * The share URL, waiting up to `timeoutMs` for an in-flight upload. Returns
- * null rather than throwing: a missing link is a downgrade, not a failure.
+ * The share URL, waiting up to `timeoutMs` for an in-flight upload.
+ * Falls back to a dynamic stateless URL so every share has a working card preview.
  */
-export async function shareUrl(data: CardData, timeoutMs = 3_000): Promise<string | null> {
+export async function shareUrl(data: CardData, timeoutMs = 2_000): Promise<string> {
   const ready = peekShareUrl(data);
   if (ready) return ready;
 
-  const job = prepareShare(data);
-  const outcome = await Promise.race([
-    job,
-    new Promise<PublishOutcome>((resolve) =>
-      setTimeout(() => resolve({ status: 'failed', message: 'timeout' }), timeoutMs),
-    ),
-  ]);
-  return outcome.status === 'published' ? outcome.url : null;
+  if (data.photo) {
+    try {
+      const job = prepareShare(data);
+      const outcome = await Promise.race([
+        job,
+        new Promise<PublishOutcome>((resolve) =>
+          setTimeout(() => resolve({ status: 'failed', message: 'timeout' }), timeoutMs),
+        ),
+      ]);
+      if (outcome.status === 'published') return outcome.url;
+    } catch {
+      // fallback to dynamic URL below
+    }
+  }
+
+  return fallbackShareUrl(data);
 }
 
 async function publish(data: CardData, signal: AbortSignal): Promise<PublishOutcome> {
@@ -372,37 +405,31 @@ function openIntent(text: string, url?: string | null): void {
 export type ShareToXResult = {
   attached?: boolean;
   copied?: boolean;
-  url?: string | null;
+  downloaded?: boolean;
+  url?: string;
   cancelled?: boolean;
 };
 
 /**
  * Open X with the caption pre-filled — with the PNG attached where the platform
- * allows it, copied to clipboard for easy pasting on desktop, and with a link
- * whose preview is the card.
- *
- * `publishedUrl` lets the caller pass a URL it already holds; otherwise we use
- * the speculative upload, waiting a moment for it only on the fallback path
- * where the link is what carries the image.
+ * allows it, copied to clipboard for easy pasting on desktop (Ctrl+V), and with a
+ * link whose preview is the card graphic.
  */
 export async function shareToX(data: CardData, publishedUrl?: string): Promise<ShareToXResult> {
   const text = caption(data);
+  const url = publishedUrl ?? (await shareUrl(data, 2_000));
 
   if (canAttachImage()) {
     try {
       const blob = await cachedCardPng(data);
       const file = new File([blob], cardFilename(data), { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
-        // Only append a link we already have — never make the share sheet wait.
-        const known = publishedUrl ?? peekShareUrl(data);
-        await navigator.share({ files: [file], text: known ? `${text}\n${known}` : text });
-        return { attached: true };
+        await navigator.share({ files: [file], text: url ? `${text}\n${url}` : text });
+        return { attached: true, url };
       }
     } catch (err) {
       // The user closing the share sheet is a normal outcome, not a failure.
       if (isAbort(err)) return { cancelled: true };
-      // An export failure is real and should surface; anything else falls
-      // through to the link path, which is a legitimate way to share.
       if (err instanceof ExportError) throw err;
     }
   }
@@ -413,7 +440,7 @@ export async function shareToX(data: CardData, publishedUrl?: string): Promise<S
     const blob = await cachedCardPng(data);
     if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
       await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type || 'image/png']: blob })
+        new ClipboardItem({ [blob.type || 'image/png']: blob }),
       ]);
       copied = true;
     }
@@ -421,8 +448,36 @@ export async function shareToX(data: CardData, publishedUrl?: string): Promise<S
     // Clipboard write may be restricted or unsupported; fallback to link/download
   }
 
-  const url = publishedUrl ?? (await shareUrl(data, 3_000));
+  // Auto-download on desktop so the user also has the PNG in their downloads
+  let downloaded = false;
+  try {
+    await downloadCard(data);
+    downloaded = true;
+  } catch {
+    // Non-critical
+  }
+
   openIntent(text, url);
 
-  return { attached: false, copied, url };
+  return { attached: false, copied, downloaded, url };
 }
+
+/** Copy the high-res card image to system clipboard */
+export async function copyCardToClipboard(data: CardData): Promise<void> {
+  const blob = await cachedCardPng(data);
+  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+    await navigator.clipboard.write([
+      new ClipboardItem({ [blob.type || 'image/png']: blob }),
+    ]);
+  } else {
+    throw new Error('Clipboard API not supported in this browser.');
+  }
+}
+
+/** Re-open X composer with pre-filled caption and card link */
+export async function reopenX(data: CardData, url?: string): Promise<void> {
+  const text = caption(data);
+  const finalUrl = url ?? (await shareUrl(data, 1_500));
+  openIntent(text, finalUrl);
+}
+
